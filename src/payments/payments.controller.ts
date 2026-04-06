@@ -1,9 +1,13 @@
 import { Controller, Post, Body, Get } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly prisma: PrismaService, // ✅ FIXED (inject Prisma)
+  ) {}
 
   // 🎟️ Create order + save lead
   @Post('create-order')
@@ -30,11 +34,24 @@ export class PaymentsController {
     );
   }
 
-  // ✅ GET LEADS
+  // ✅ GET LEADS (clean way)
   @Get('leads')
   async getLeads() {
-    return this.paymentsService['prisma'].lead.findMany({
+    return this.prisma.lead.findMany({
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // 🔴 ADMIN TOGGLE SALES
+  @Post('toggle-sales')
+  async toggleSales(@Body() body: { enabled: boolean }) {
+    return this.prisma.setting.upsert({
+      where: { key: 'ticket_sales_enabled' },
+      update: { value: String(body.enabled) },
+      create: {
+        key: 'ticket_sales_enabled',
+        value: String(body.enabled),
+      },
     });
   }
 }

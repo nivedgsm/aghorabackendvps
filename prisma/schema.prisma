@@ -41,3 +41,9 @@ model Lead {
   phone     String   @unique
   createdAt DateTime @default(now())
 }
+
+model Setting {
+  id    String @id @default("global")
+  key   String @unique
+  value String
+}
